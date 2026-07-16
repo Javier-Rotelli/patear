@@ -12,8 +12,9 @@ Use Vite directly via the local binary for dev/build:
 - Production build: `npx vite build`
 - Preview build: `npx vite preview`
 - Format: `npm run format` (writes) / `npm run format:check` (verifies)
+- Lint: `npm run lint` (checks) / `npm run lint:fix` (auto-fixes)
 
-Formatting is handled by [Prettier](https://prettier.io/). There is no test runner or linter configured.
+Formatting is handled by [Prettier](https://prettier.io/) and linting by [ESLint](https://eslint.org/) (flat config in `eslint.config.mjs`, using `typescript-eslint`, with `eslint-config-prettier` to avoid rule conflicts). There is no test runner configured.
 
 ## Layout
 

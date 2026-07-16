@@ -31,8 +31,6 @@ const camera = new THREE.PerspectiveCamera(
   1000,
 );
 
-const loader = new GLTFLoader();
-
 loadGLTF("models/players/character-male-f.glb")
   .then((model) => {
     scene.add(model.scene);
@@ -56,7 +54,7 @@ document.body.appendChild(renderer.domElement);
 
 camera.position.z = 5;
 
-function animate(time) {
+function animate() {
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
