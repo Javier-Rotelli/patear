@@ -7,10 +7,15 @@
   "type": "commonjs",
   "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "three": "^0.185.1",
     "vite": "^8.1.5"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.5"
   }
 }
