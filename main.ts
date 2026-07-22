@@ -1,60 +1,42 @@
 import * as THREE from "three";
-import { GLTF, GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { loadGLTF } from "./src/GLTFUtils";
+import Model from "./src/model";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-function loadGLTF(url: string): Promise<GLTF> {
-  console.log("Loading: ", url);
-
-  return new Promise((resolve, reject) => {
-    const gltfLoader = new GLTFLoader();
-    gltfLoader.load(
-      url,
-      (model) => {
-        model.scene.traverse((child) => {
-          child.castShadow = true;
-          child.receiveShadow = true;
-        });
-        resolve(model);
-      },
-      undefined,
-      (e) => {
-        reject(e);
-      },
-    );
+function loadContent(
+  manager: THREE.LoadingManager,
+  modelUrls: { [key: string]: string },
+) {
+  const gltfLoader = new GLTFLoader(manager);
+  Object.keys(modelUrls).forEach((name) => {
+    const url = modelUrls[name];
+    loadGLTF(gltfLoader, url, (gltf) => {
+      const model = new Model(gltf);
+      models[name] = model;
+    });
   });
 }
+const loadingManager = new THREE.LoadingManager();
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000,
-);
+const modelUrls = {
+  jugadorF: "models/players/character-male-b.glb",
+  cancha: "models/cancha/cancha.glb",
+};
+const models: { [name: string]: Model } = {};
 
-loadGLTF("models/players/character-male-f.glb")
-  .then((model) => {
-    scene.add(model.scene);
-  })
-  .catch((error) => {
-    console.error("Error loading GLTF model:", error);
-  });
+loadContent(loadingManager, modelUrls);
 
-const skyBlue = 0x87ceeb;
-scene.background = new THREE.Color(skyBlue);
-scene.fog = new THREE.FogExp2(skyBlue, 0.02);
+loadingManager.onLoad = init;
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const progressbarElem = document.querySelector<HTMLDivElement>("#progressbar");
+loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+  console.log(
+    `Loading file: ${url}. Loaded ${itemsLoaded} of ${itemsTotal} files.`,
+  );
+  progressbarElem!.style.width = `${((itemsLoaded / itemsTotal) * 100) | 0}%`;
+};
 
-// const geometry = new THREE.BoxGeometry(1, 1, 1);
-// const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-// const cube = new THREE.Mesh(geometry, material);
-// scene.add(cube);
-
-camera.position.z = 5;
-
-function animate() {
-  renderer.render(scene, camera);
+function init() {
+  const loadingElem = document.querySelector<HTMLDivElement>("#loading");
+  loadingElem!.style.display = "none";
 }
-renderer.setAnimationLoop(animate);
