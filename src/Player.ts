@@ -20,6 +20,7 @@ export default class Player {
     public speed: number = 5,
   ) {
     this.modelInstance.root.matrixAutoUpdate = false;
+    this.modelInstance.root.castShadow = true;
   }
 
   update(delta: number) {
@@ -45,14 +46,12 @@ export default class Player {
 
       const angle = getAngleFromVector(moveVector);
 
-      console.log("angle", angle / Math.PI, moveVector);
-
       const rotation = new THREE.Matrix4().makeRotationY(angle);
 
       world.multiply(rotation);
       this.position.add(moveVector.multiplyScalar(this.speed * delta));
 
-      this.modelInstance.play("walk");
+      this.modelInstance.play("sprint");
     } else {
       this.modelInstance.play("idle");
     }
