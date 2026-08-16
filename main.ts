@@ -5,6 +5,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import DebugGUI from "./src/DebugGUI";
 import InputManager from "./src/InputManager";
 import Player from "./src/Player";
+import { createGrass } from "./src/grass";
 
 function loadContent(
   manager: THREE.LoadingManager,
@@ -27,8 +28,17 @@ const modelUrls = {
   cancha: "models/cancha/cancha.glb",
 };
 const models: { [name: string]: Model } = {};
+const textures: { [name: string]: THREE.Texture } = {};
 
 loadContent(loadingManager, modelUrls);
+
+textures["cancha"] = new THREE.TextureLoader(loadingManager).load(
+  "models/cancha/cancha.png",
+);
+
+textures["cancha-rotada"] = new THREE.TextureLoader(loadingManager).load(
+  "models/cancha/cancha-rotada.png",
+);
 
 loadingManager.onLoad = init;
 
@@ -53,7 +63,7 @@ function init() {
   //scene.fog = new THREE.FogExp2(skyBlue, 0.02);
 
   const camera = new THREE.PerspectiveCamera(
-    80,
+    60,
     window.innerWidth / window.innerHeight,
     0.1,
     1000,
@@ -70,13 +80,12 @@ function init() {
 
   const player = new Player(
     inputManager,
-    new AnimatedModelInstance(scene, models["jugadorF"], "walk"),
+    new AnimatedModelInstance(scene, models["jugadorF"], "idle"),
     5,
   );
   const cancha = models["cancha"];
+
   cancha.gltf.scene.rotateY(Math.PI);
-  cancha.gltf.scene.position.set(0, -1, 0);
-  cancha.gltf.scene.scale.set(0.5, 0.5, 0.5);
 
   scene.add(cancha.gltf.scene);
 
@@ -92,20 +101,12 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  const geometry = new THREE.PlaneGeometry(70, 50);
-  geometry.rotateX(-Math.PI / 2);
-  geometry.translate(0, -1, 0);
-  const material = new THREE.MeshPhongMaterial({
-    color: "#35c112",
-    side: THREE.FrontSide,
-  });
-  const plane = new THREE.Mesh(geometry, material);
-  scene.add(plane);
+  createGrass(scene, textures);
 
   // loop
   function update(delta: number) {
-    player.update(delta);
     inputManager.update();
+    player.update(delta);
   }
 
   let then = 0;
