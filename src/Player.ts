@@ -18,6 +18,7 @@ export default class Player {
     private inputManager: InputManager,
     public modelInstance: AnimatedModelInstance,
     public speed: number = 5,
+    public worldLimits: THREE.Vector3,
   ) {
     this.modelInstance.root.matrixAutoUpdate = false;
     this.modelInstance.root.castShadow = true;
@@ -49,7 +50,13 @@ export default class Player {
       const rotation = new THREE.Matrix4().makeRotationY(angle);
 
       world.multiply(rotation);
+
       this.position.add(moveVector.multiplyScalar(this.speed * delta));
+
+      this.position.clamp(
+        this.worldLimits.clone().multiplyScalar(-1),
+        this.worldLimits,
+      );
 
       this.modelInstance.play("sprint");
     } else {

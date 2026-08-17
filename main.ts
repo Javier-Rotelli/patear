@@ -71,10 +71,11 @@ function init() {
 
   camera.position.z = 5;
   camera.position.y = 3;
+  const worldLimits = new THREE.Vector3(31, 0, 20);
 
+  let debugGUI: DebugGUI | undefined;
   if (debug) {
-    const debugGUI = new DebugGUI(camera, scene);
-    debugGUI.setup();
+    debugGUI = new DebugGUI(camera, scene, worldLimits);
   }
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 
@@ -82,20 +83,14 @@ function init() {
     inputManager,
     new AnimatedModelInstance(scene, models["jugadorF"], "idle"),
     5,
+    worldLimits,
   );
+
   const cancha = models["cancha"];
-
   cancha.gltf.scene.rotateY(Math.PI);
-
   scene.add(cancha.gltf.scene);
 
-  const color = 0xffffff;
-  const intensity = 3;
-  const light = new THREE.DirectionalLight(color, intensity);
-  light.position.set(-1, 2, 4);
-  scene.add(light);
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-  scene.add(ambientLight);
+  addLight(scene);
 
   const renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -127,4 +122,14 @@ function init() {
     renderer.render(scene, camera);
   }
   renderer.setAnimationLoop(render);
+}
+
+function addLight(scene: THREE.Scene) {
+  const color = 0xffffff;
+  const intensity = 3;
+  const light = new THREE.DirectionalLight(color, intensity);
+  light.position.set(-1, 2, 4);
+  scene.add(light);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
 }
