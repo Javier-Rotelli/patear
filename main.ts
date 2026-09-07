@@ -1,11 +1,13 @@
 import * as THREE from "three";
-import { loadGLTF } from "./src/GLTFUtils";
-import Model, { AnimatedModelInstance } from "./src/model";
+import { loadGLTF } from "./src/models/GLTFUtils";
+import Model, { AnimatedModelInstance } from "./src/models/model";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import DebugGUI from "./src/DebugGUI";
 import InputManager from "./src/InputManager";
 import Player from "./src/Player";
 import { createGrass } from "./src/grass";
+import NetworkManager from "./src/network";
+import getModelUrls from "./src/models/getModelUrls";
 
 function loadContent(
   manager: THREE.LoadingManager,
@@ -23,10 +25,8 @@ function loadContent(
 const debug = true;
 const loadingManager = new THREE.LoadingManager();
 
-const modelUrls = {
-  jugadorF: "models/players/character-male-b.glb",
-  cancha: "models/cancha/cancha.glb",
-};
+const modelUrls = getModelUrls();
+
 const models: { [name: string]: Model } = {};
 const textures: { [name: string]: THREE.Texture } = {};
 
@@ -50,6 +50,7 @@ loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
   progressbarElem!.style.width = `${((itemsLoaded / itemsTotal) * 100) | 0}%`;
 };
 
+const networkManager = new NetworkManager("tigre");
 const inputManager = new InputManager();
 
 function init() {
@@ -81,7 +82,7 @@ function init() {
 
   const player = new Player(
     inputManager,
-    new AnimatedModelInstance(scene, models["jugadorF"], "idle"),
+    new AnimatedModelInstance(scene, models["jugadorMf"], "idle"),
     5,
     worldLimits,
   );
