@@ -14,7 +14,7 @@ export default class Model {
   prepModelsAndAnimations() {
     this.gltf.animations.forEach((clip) => {
       this.animations[clip.name] = clip;
-      console.log("  ", clip.name);
+      // console.log("  ", clip.name);
     });
   }
 }
@@ -72,3 +72,37 @@ export class AnimatedModelInstance {
     this.root.updateMatrixWorld(true);
   }
 }
+
+export type PlayerAnimationNames =
+  | "static"
+  | "idle"
+  | "walk"
+  | "sprint"
+  | "jump"
+  | "fall"
+  | "crouch"
+  | "sit"
+  | "drive"
+  | "die"
+  | "pick-up"
+  | "emote-yes"
+  | "emote-no"
+  | "holding-right"
+  | "holding-left"
+  | "holding-both"
+  | "holding-right-shoot"
+  | "holding-left-shoot"
+  | "holding-both-shoot"
+  | "attack-melee-right"
+  | "attack-melee-left"
+  | "attack-kick-right"
+  | "attack-kick-left"
+  | "interact-right"
+  | "interact-left"
+  | "wheelchair-sit"
+  | "wheelchair-look-left"
+  | "wheelchair-look-right"
+  | "wheelchair-move-forward"
+  | "wheelchair-move-back"
+  | "wheelchair-move-left"
+  | "wheelchair-move-right";

@@ -4,7 +4,7 @@
   "description": "",
   "license": "MIT",
   "author": "Javier Rotelli",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,10 +13,14 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "dev": "vite .",
-    "build": "vite build"
+    "build": "vite build",
+    "server": "node src/server.ts"
   },
   "dependencies": {
+    "@trystero-p2p/torrent": "^0.25.3",
+    "@trystero-p2p/ws-relay": "^0.25.3",
     "three": "^0.185.1",
+    "trystero": "^0.25.3",
     "vite": "^8.1.5"
   },
   "devDependencies": {
