@@ -3,16 +3,22 @@ import { joinRoom as joinRoomWS } from "@trystero-p2p/ws-relay";
 import { JoinRoomConfig, MessageAction, Room } from "trystero";
 import { selfId } from "trystero";
 import { PlayerMap } from "./Player";
-import { IInputManager, KeyState } from "./Input/IInputManager";
+import { IInputManager } from "./Input/IInputManager";
+import createDebug from "debug";
 
-type GetHostAction = { id: string };
-
+type GetHostAction = { id: string | null };
 type InputUpdateAction = IInputManager["keys"];
 
+const log = createDebug("network");
 export default class NetworkManager {
   private room: Room;
   private isHost: boolean = false;
+  private hostId: string | null = null;
   private inputUpdateAction: MessageAction<InputUpdateAction>;
+  private announceHost!: MessageAction;
+  private becomeHostTimeout?: ReturnType<typeof setTimeout>;
+
+  public desynced: boolean = false;
 
   peers: { [id: string]: { ping: number } } = {};
 
@@ -33,47 +39,40 @@ export default class NetworkManager {
     );
 
     this.setupPingPolling();
-    // // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    // const getHost = this.room.makeAction<{}, GetHostAction>("getHost", {
-    //   kind: "request",
-    //   onRequest: () => {
-    //     return { id: this.isHost ? selfId : this.hostId };
-    //   },
-    // });
-
-    // getHost
-    //   .requestMany(
-    //     {},
-    //     {
-    //       target: Object.keys(peers)[0],
-    //     },
-    //   )
-    //   .then((response) => {
-    //     console.log(`Host ID received: ${response.id}`);
-    //     this.hostId = response.id;
-    //   });
+    this.setupWaitForHost();
 
     this.inputUpdateAction =
       this.room.makeAction<InputUpdateAction>("inputUpdate");
 
-    this.room.onPeerJoin = (pId) => {
-      this.peers[pId] = { ping: 0 };
-      console.log(`${pId} joined`);
-    };
+    this.room.onPeerJoin = this.handlePeerJoin.bind(this);
 
     this.room.onPeerLeave = (peerId) => {
+      if (peerId === this.hostId) {
+        log(`Host ${peerId} left, will attempt to become host`);
+        this.desynced = true;
+        this.hostId = null;
+        this.becomeHostTimeout = setTimeout(() => {
+          this.initHost();
+        }, Math.random() * 2000);
+      }
       delete this.peers[peerId];
-      console.log(`${peerId} left`);
+      log(`${peerId} left`);
     };
   }
 
-  initHost() {
+  private initHost() {
     this.isHost = true;
-    console.log(`Initializing host for room: ${this.roomId}`);
+    this.announceHost.send({});
+    this.desynced = false;
+    log(`Becoming host for room: ${this.roomId}`);
   }
 
-  handlePeerJoin() {
-    this.room.onPeerJoin = (pId) => console.log(`${pId} joined`);
+  private handlePeerJoin(pId: string) {
+    this.peers[pId] = { ping: 0 };
+    if (this.isHost) {
+      this.announceHost.send({});
+    }
+    log(`${pId} joined`);
   }
 
   onLocalInputUpdate(inputManager: IInputManager) {
@@ -85,7 +84,7 @@ export default class NetworkManager {
       async () =>
         Object.keys(this.peers).forEach((id) => {
           this.room.ping(id).then((ping) => {
-            console.log(`Ping for ${id}: ${ping}`);
+            //log(`Ping for ${id}: ${ping}`);
             if (this.peers[id]) {
               this.peers[id].ping = ping;
             }
@@ -93,5 +92,21 @@ export default class NetworkManager {
         }),
       1000,
     );
+  }
+
+  private setupWaitForHost() {
+    this.announceHost = this.room.makeAction("announceHost");
+    this.becomeHostTimeout = setTimeout(() => {
+      this.initHost();
+      const peers = this.room.getPeers();
+      log(`Current peers: ${Object.keys(peers).join(", ")}`);
+    }, 2000);
+
+    this.announceHost.onMessage = (_, { peerId }) => {
+      log(`Host announced by ${peerId}`);
+      this.hostId = peerId;
+      this.desynced = false;
+      clearTimeout(this.becomeHostTimeout);
+    };
   }
 }
