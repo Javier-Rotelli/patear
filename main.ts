@@ -3,11 +3,14 @@ import { loadGLTF } from "./src/models/GLTFUtils";
 import Model, { AnimatedModelInstance } from "./src/models/model";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import DebugGUI from "./src/DebugGUI";
-import InputManager from "./src/InputManager";
-import Player from "./src/Player";
+import InputManager from "./src/Input/InputManager";
+import Player, { PlayerMap } from "./src/Player";
 import { createGrass } from "./src/grass";
 import NetworkManager from "./src/network";
 import getModelUrls from "./src/models/getModelUrls";
+
+import createDebug from "debug";
+const log = createDebug("main");
 
 function loadContent(
   manager: THREE.LoadingManager,
@@ -41,16 +44,12 @@ textures["cancha-rotada"] = new THREE.TextureLoader(loadingManager).load(
 );
 
 loadingManager.onLoad = init;
-
 const progressbarElem = document.querySelector<HTMLDivElement>("#progressbar");
 loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-  console.log(
-    `Loading file: ${url}. Loaded ${itemsLoaded} of ${itemsTotal} files.`,
-  );
+  log(`Loading file: ${url}. Loaded ${itemsLoaded} of ${itemsTotal} files.`);
   progressbarElem!.style.width = `${((itemsLoaded / itemsTotal) * 100) | 0}%`;
 };
 
-const networkManager = new NetworkManager("tigre");
 const inputManager = new InputManager();
 
 function init() {
@@ -72,6 +71,10 @@ function init() {
 
   camera.position.z = 5;
   camera.position.y = 3;
+
+  const players: PlayerMap = {};
+  const networkManager = new NetworkManager("tigre", players);
+
   const worldLimits = new THREE.Vector3(31, 0, 20);
 
   let debugGUI: DebugGUI | undefined;

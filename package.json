@@ -14,11 +14,12 @@
     "lint:fix": "eslint . --fix",
     "dev": "vite .",
     "build": "vite build",
-    "server": "node src/server.ts"
+    "server": "node --env-file-if-exists=.env src/server.ts"
   },
   "dependencies": {
     "@trystero-p2p/torrent": "^0.25.3",
     "@trystero-p2p/ws-relay": "^0.25.3",
+    "debug": "^4.4.3",
     "three": "^0.185.1",
     "trystero": "^0.25.3",
     "vite": "^8.1.5"
