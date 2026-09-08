@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import InputManager from "./InputManager";
-import { AnimatedModelInstance } from "./model";
-import { InputKey } from "./InputManager";
+import type { IInputManager } from "./Input/IInputManager";
+import { AnimatedModelInstance } from "./models/model";
+import { InputKey } from "./Input/IInputManager";
 
 const getAngleFromVector = (vector: THREE.Vector3) => {
   const angle = Math.acos(vector.dot(new THREE.Vector3(0, 0, 1)));
@@ -11,11 +11,16 @@ const getAngleFromVector = (vector: THREE.Vector3) => {
   return angle;
 };
 
+export type PlayerMap = {
+  local: Player;
+  [id: string]: Player;
+};
+
 export default class Player {
   public position: THREE.Vector3 = new THREE.Vector3();
 
   constructor(
-    private inputManager: InputManager,
+    private inputManager: IInputManager,
     public modelInstance: AnimatedModelInstance,
     public speed: number = 5,
     public worldLimits: THREE.Vector3,

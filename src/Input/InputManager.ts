@@ -1,16 +1,8 @@
-type KeyState = {
-  down: boolean;
-  justPressed: boolean;
-};
+import type { IInputManager, KeyState } from "./IInputManager";
+import { InputKey } from "./IInputManager";
 
-export const enum InputKey {
-  Left = "left",
-  Right = "right",
-  Up = "up",
-  Down = "down",
-  A = "a",
-  B = "b",
-}
+export { InputKey };
+export type { KeyState, IInputManager };
 
 // Keeps the state of keys/buttons
 //
@@ -26,7 +18,7 @@ export const enum InputKey {
 // To see if the left key was pressed this frame
 //
 // Keys are 'left', 'right', 'a', 'b', 'up', 'down'
-export default class InputManager {
+export default class InputManager implements IInputManager {
   keys: Partial<Record<InputKey, KeyState>> = {};
 
   constructor() {
