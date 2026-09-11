@@ -2,11 +2,17 @@
 import { joinRoom as joinRoomWS } from "@trystero-p2p/ws-relay";
 import { JoinRoomConfig, MessageAction, Room } from "trystero";
 import { selfId } from "trystero";
-import { PlayerMap } from "./Player";
+import PlayerManager from "./PlayerManager";
 import { IInputManager } from "./Input/IInputManager";
 import createDebug from "debug";
+import NetworkInputManager from "./Input/NetworkInputManager";
+
+//temp
+import * as THREE from "three";
+import Model, { AnimatedModelInstance } from "./models/model";
 
 type GetHostAction = { id: string | null };
+type GetPlayerDataAction = { id: string };
 type InputUpdateAction = IInputManager["keys"];
 
 const log = createDebug("network");
@@ -14,6 +20,7 @@ export default class NetworkManager {
   private room: Room;
   private isHost: boolean = false;
   private hostId: string | null = null;
+  private getPlayerData: MessageAction<GetPlayerDataAction>;
   private inputUpdateAction: MessageAction<InputUpdateAction>;
   private announceHost!: MessageAction;
   private becomeHostTimeout?: ReturnType<typeof setTimeout>;
@@ -24,7 +31,10 @@ export default class NetworkManager {
 
   constructor(
     private roomId: string,
-    private players: PlayerMap,
+    private players: PlayerManager,
+    //temp
+    private scene: THREE.Scene,
+    private models: { [name: string]: Model },
   ) {
     const config: JoinRoomConfig = { appId: "pate.ar" };
     //this.room = joinRoom(config, roomId);
@@ -55,6 +65,7 @@ export default class NetworkManager {
           this.initHost();
         }, Math.random() * 2000);
       }
+      this.players.removePlayer(peerId);
       delete this.peers[peerId];
       log(`${peerId} left`);
     };
@@ -73,6 +84,11 @@ export default class NetworkManager {
       this.announceHost.send({});
     }
     log(`${pId} joined`);
+    this.players.addPlayer(
+      pId,
+      new NetworkInputManager(),
+      new AnimatedModelInstance(this.scene, this.models["jugadorMb"], "idle"),
+    );
   }
 
   onLocalInputUpdate(inputManager: IInputManager) {

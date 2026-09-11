@@ -24,11 +24,15 @@ export class AnimatedModelInstance {
   currentAction?: THREE.AnimationAction;
   private animations: { [name: string]: THREE.AnimationClip } = {};
   public root: THREE.Object3D;
-  constructor(scene: THREE.Scene, model: Model, clipName?: string) {
+  constructor(
+    private scene: THREE.Scene,
+    model: Model,
+    clipName?: string,
+  ) {
     const clonedScene = SkeletonUtils.clone(model.gltf.scene);
     this.root = new THREE.Object3D();
     this.root.add(clonedScene);
-    scene.add(this.root);
+    this.scene.add(this.root);
     this.mixer = new THREE.AnimationMixer(clonedScene);
     this.animations = model.animations;
 
@@ -70,6 +74,10 @@ export class AnimatedModelInstance {
   update(delta: number) {
     this.mixer.update(delta);
     this.root.updateMatrixWorld(true);
+  }
+
+  remove() {
+    this.scene.remove(this.root);
   }
 }
 

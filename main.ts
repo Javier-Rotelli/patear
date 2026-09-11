@@ -4,12 +4,12 @@ import Model, { AnimatedModelInstance } from "./src/models/model";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import DebugGUI from "./src/DebugGUI";
 import InputManager from "./src/Input/InputManager";
-import Player, { PlayerMap } from "./src/Player";
 import { createGrass } from "./src/grass";
 import NetworkManager from "./src/network";
 import getModelUrls from "./src/models/getModelUrls";
 
 import createDebug from "debug";
+import PlayerManager from "./src/PlayerManager";
 const log = createDebug("main");
 
 function loadContent(
@@ -34,7 +34,6 @@ const models: { [name: string]: Model } = {};
 const textures: { [name: string]: THREE.Texture } = {};
 
 loadContent(loadingManager, modelUrls);
-
 textures["cancha"] = new THREE.TextureLoader(loadingManager).load(
   "models/cancha/cancha.png",
 );
@@ -51,6 +50,7 @@ loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
 };
 
 const inputManager = new InputManager();
+const worldLimits = new THREE.Vector3(31, 0, 20);
 
 function init() {
   const loadingElem = document.querySelector<HTMLDivElement>("#loading");
@@ -72,23 +72,24 @@ function init() {
   camera.position.z = 5;
   camera.position.y = 3;
 
-  const players: PlayerMap = {};
-  const networkManager = new NetworkManager("tigre", players);
+  const playerManager = new PlayerManager(
+    worldLimits,
+    inputManager,
+    new AnimatedModelInstance(scene, models["jugadorMf"], "idle"),
+  );
 
-  const worldLimits = new THREE.Vector3(31, 0, 20);
+  const networkManager = new NetworkManager(
+    "tigre",
+    playerManager,
+    scene,
+    models,
+  );
 
   let debugGUI: DebugGUI | undefined;
   if (debug) {
     debugGUI = new DebugGUI(camera, scene, worldLimits);
   }
   camera.lookAt(new THREE.Vector3(0, 0, 0));
-
-  const player = new Player(
-    inputManager,
-    new AnimatedModelInstance(scene, models["jugadorMf"], "idle"),
-    5,
-    worldLimits,
-  );
 
   const cancha = models["cancha"];
   cancha.gltf.scene.rotateY(Math.PI);
@@ -105,7 +106,7 @@ function init() {
   // loop
   function update(delta: number) {
     inputManager.update();
-    player.update(delta);
+    playerManager.update(delta);
   }
 
   let then = 0;
@@ -117,7 +118,7 @@ function init() {
     update(delta);
 
     const playerPos = new THREE.Vector3().setFromMatrixPosition(
-      player.modelInstance.root.matrix,
+      playerManager.playersMap.local.modelInstance.root.matrix,
     );
     camera.lookAt(playerPos);
     camera.position.x = playerPos.x;
