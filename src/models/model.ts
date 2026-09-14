@@ -72,7 +72,7 @@ export class AnimatedModelInstance {
   }
 
   update(delta: number) {
-    this.mixer.update(delta);
+    this.mixer.update(delta * 0.001); // Convert delta from milliseconds to seconds
     this.root.updateMatrixWorld(true);
   }
 

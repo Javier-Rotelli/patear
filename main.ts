@@ -109,13 +109,26 @@ function init() {
     playerManager.update(delta);
   }
 
-  let then = 0;
+  let then = 0,
+    delta = 0;
+  const timestep = 1000 / 60;
+  const maxFPS = 60;
 
   function render(time: number) {
-    const now = time * 0.001;
-    const delta = Math.min(now - then, 1 / 20);
+    const now = time;
+    delta += now - then;
+    // // Throttle the frame rate.
+    // if (now < then + 1000 / maxFPS) {
+    //   return;
+    // }
+
     then = now;
-    update(delta);
+    log(`delta: ${delta}`);
+    while (delta >= timestep) {
+      log(`updating with delta: ${delta}`);
+      update(timestep);
+      delta -= timestep;
+    }
 
     const playerPos = new THREE.Vector3().setFromMatrixPosition(
       playerManager.playersMap.local.modelInstance.root.matrix,

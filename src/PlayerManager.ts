@@ -27,7 +27,7 @@ type PlayerState = {
 
 export default class PlayerManager {
   playersMap: PlayerMap;
-  public speed: number = 5;
+  public speed: number = 0.005;
 
   constructor(
     public worldLimits: THREE.Vector3,
