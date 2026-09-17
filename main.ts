@@ -111,16 +111,16 @@ function init() {
 
   let then = 0,
     delta = 0;
-  const timestep = 1000 / 60;
+  const timestep = 1 / 60;
   const maxFPS = 60;
 
   function render(time: number) {
     const now = time;
     delta += now - then;
     // // Throttle the frame rate.
-    // if (now < then + 1000 / maxFPS) {
-    //   return;
-    // }
+    if (now < then + 1 / maxFPS) {
+      return;
+    }
 
     then = now;
     log(`delta: ${delta}`);
