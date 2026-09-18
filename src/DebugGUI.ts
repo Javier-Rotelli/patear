@@ -1,7 +1,7 @@
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import type { Camera } from "three";
 import * as THREE from "three";
-
+import { debug } from "debug";
 export default class DebugGUI {
   private gui: GUI;
 
@@ -17,10 +17,25 @@ export default class DebugGUI {
     const axesHelper = new THREE.AxesHelper(5);
     this.scene.add(axesHelper);
 
-    const cameraFolder = this.gui.addFolder("Camera");
-    cameraFolder.add(this.camera.position, "x", -100, 100).name("Position X");
-    cameraFolder.add(this.camera.position, "y", -100, 100).name("Position Y");
-    cameraFolder.add(this.camera.position, "z", -100, 100).name("Position Z");
+    const debugFolder = this.gui.addFolder("debug");
+    const debugConfig = {
+      main: false,
+      network: true,
+      PlayerManager: false,
+    };
+    debugFolder.add(debugConfig, "main");
+    debugFolder.add(debugConfig, "network");
+    debugFolder.add(debugConfig, "PlayerManager");
+
+    debugFolder.onChange(({ object }) => {
+      const string = Object.entries(object).reduce((acc, [key, enabled]) => {
+        if (enabled) {
+          return acc + key + ", ";
+        }
+        return acc;
+      }, "");
+      debug.enable(string);
+    });
 
     this.debugPlanesFolder = this.gui.addFolder(`Debug Planes`);
 
