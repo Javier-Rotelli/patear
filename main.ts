@@ -10,6 +10,7 @@ import getModelUrls from "./src/models/getModelUrls";
 
 import createDebug from "debug";
 import PlayerManager from "./src/PlayerManager";
+import { maxFPS, timestep } from "./src/constants";
 const log = createDebug("main");
 
 function loadContent(
@@ -104,40 +105,60 @@ function init() {
   createGrass(scene, textures);
 
   // loop
-  function update(delta: number) {
+  function update(delta: number, now: number) {
+    let numUpdates = 0;
+    while (delta >= timestep) {
+      //log(`updating with delta: ${delta}`);
+      updateLocal(timestep, now);
+      delta -= timestep;
+      if (++numUpdates > 100) {
+        updateLocal(delta, now);
+        log("Too many updates in one frame, dropping the rest");
+        delta = 0;
+        break;
+      }
+    }
+
+    const simulationDelta = timestep * numUpdates;
+    networkManager.update(simulationDelta);
+    playerManager.updatePlayersMatrices(simulationDelta);
+
+    log(`numUpdates: ${numUpdates}, delta: ${delta}`);
+    return simulationDelta;
+  }
+  function updateLocal(delta: number, now: number) {
     inputManager.update();
-    playerManager.update(delta);
+    const move = playerManager.updateLocalPlayer(delta, now);
+    networkManager.sendMovement(move);
   }
 
   let then = 0,
     delta = 0;
-  const timestep = 1 / 60;
-  const maxFPS = 60;
-
-  function render(time: number) {
-    const now = time;
+  function render(now: number) {
     delta += now - then;
-    // // Throttle the frame rate.
-    if (now < then + 1 / maxFPS) {
+    // Throttle the frame rate.
+    if (delta < 1000 / maxFPS) {
       return;
     }
-
-    then = now;
     log(`delta: ${delta}`);
-    while (delta >= timestep) {
-      log(`updating with delta: ${delta}`);
-      update(timestep);
-      delta -= timestep;
-    }
+    const simulatedDelta = update(delta, now);
+    delta -= simulatedDelta;
 
     const playerPos = new THREE.Vector3().setFromMatrixPosition(
-      playerManager.playersMap.local.modelInstance.root.matrix,
+      playerManager.localPlayer.modelInstance.root.matrix,
     );
+
     camera.lookAt(playerPos);
-    camera.position.x = playerPos.x;
-    camera.position.z = playerPos.z + 5;
+    camera.position.lerp(
+      playerPos.clone().add(new THREE.Vector3(0, 3, 5)),
+      0.2,
+    );
+    // camera.position.x = playerPos.x;
+    // camera.position.z = playerPos.z + 5;
 
     renderer.render(scene, camera);
+
+    then = now;
   }
   renderer.setAnimationLoop(render);
 }
