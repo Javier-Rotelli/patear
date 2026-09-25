@@ -2,6 +2,16 @@ import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import type { Camera } from "three";
 import * as THREE from "three";
 import { debug } from "debug";
+
+const updateEnabledDebugs = (enabledDebugs: object) => {
+  const string = Object.entries(enabledDebugs).reduce((acc, [key, enabled]) => {
+    if (enabled) {
+      return acc + key + ", ";
+    }
+    return acc;
+  }, "");
+  debug.enable(string);
+};
 export default class DebugGUI {
   private gui: GUI;
 
@@ -23,21 +33,16 @@ export default class DebugGUI {
       network: true,
       PlayerManager: false,
     };
+    updateEnabledDebugs(debugConfig);
     debugFolder.add(debugConfig, "main");
     debugFolder.add(debugConfig, "network");
     debugFolder.add(debugConfig, "PlayerManager");
 
     debugFolder.onChange(({ object }) => {
-      const string = Object.entries(object).reduce((acc, [key, enabled]) => {
-        if (enabled) {
-          return acc + key + ", ";
-        }
-        return acc;
-      }, "");
-      debug.enable(string);
+      updateEnabledDebugs(object);
     });
 
-    this.debugPlanesFolder = this.gui.addFolder(`Debug Planes`);
+    this.debugPlanesFolder = this.gui.addFolder(`Debug Planes`).close();
 
     this.setupLimitPlanes(limits);
   }
